@@ -1,35 +1,70 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-require("dotenv").config();
+// backend/routes/articles.js
+const express = require('express');
+const router = express.Router();
+const Article = require('../models/Article');
 
-const app = express();
+// GET /api/articles : liste des articles
+router.get('/', async (req, res) => {
+  try {
+    const articles = await Article.find().sort({ date: -1 });
+    res.json(articles);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur lors de la récupération des articles' });
+  }
+});
 
-// CORS (en test: *, en prod: ton domaine Vercel)
-app.use(cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*'
-}));
+// (facultatif) GET /api/articles/:id
+router.get('/:id', async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+    if (!article) return res.status(404).json({ error: 'Introuvable' });
+    res.json(article);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
 
-app.use(express.json());
+// (facultatif) POST /api/articles
+router.post('/', async (req, res) => {
+  try {
+    const { titre, contenu, image } = req.body;
+    const created = await Article.create({ titre, contenu, image });
+    res.status(201).json(created);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: 'Données invalides' });
+  }
+});
 
-// Static (uploads)
-app.use('/uploads', express.static('uploads'));
+// (facultatif) PUT /api/articles/:id
+router.put('/:id', async (req, res) => {
+  try {
+    const { titre, contenu, image } = req.body;
+    const updated = await Article.findByIdAndUpdate(
+      req.params.id,
+      { titre, contenu, image },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ error: 'Introuvable' });
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(400).json({ error: 'Mise à jour impossible' });
+  }
+});
 
-// Healthcheck
-app.get("/", (req, res) => res.send("API OK"));
+// (facultatif) DELETE /api/articles/:id
+router.delete('/:id', async (req, res) => {
+  try {
+    const deleted = await Article.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Introuvable' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Suppression impossible' });
+  }
+});
 
-// MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("✅ Connecté à MongoDB");
-    console.log("📂 Base utilisée :", mongoose.connection.name);
-  })
-  .catch((err) => console.error("❌ Erreur MongoDB :", err));
-
-// Routes
-app.use('/api/articles', require('./routes/articles'));
-app.use('/api/auth', require('./routes/auth'));
-
-// Start (Render fixe PORT)
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Serveur lancé sur port ${PORT}`));
+module.exports = router;

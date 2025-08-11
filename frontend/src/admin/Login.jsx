@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { API_URL } from '../api'; // ajuster le chemin selon ton dossier
+import { API_URL } from '../api';
 
 function Login() {
   const [email, setEmail] = useState('');

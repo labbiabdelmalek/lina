@@ -13,7 +13,7 @@ function Accueil() {
 
   return (
     <div className="container mt-4">
-      <h1 className="mb-4">Articles récents...</h1>
+      <h1 className="mb-4">Articles récents....</h1>
       <div className="row">
         {articles.map(article => (
           <div className="col-md-6 col-lg-4 mb-4" key={article._id}>

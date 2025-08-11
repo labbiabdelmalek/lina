@@ -133,7 +133,10 @@ function Dashboard() {
               <div className="col-md-8">
                 <div className="card-body">
                   <h5 className="card-title">{article.titre}</h5>
-                  <p className="card-text">{article.contenu.substring(0, 100)}...</p>
+               <p className="card-text">
+  {(typeof article.contenu === 'string' ? article.contenu : '').substring(0, 100)}...
+</p>
+
                   <button className="btn btn-sm btn-primary me-2" onClick={() => handleEdit(article)}>
                     ✏️ Modifier
                   </button>

@@ -8,7 +8,7 @@ function Article() {
   const [article, setArticle] = useState(null);
 
   useEffect(() => {
-  axios.get(`${API_URL}/api/articles`)
+ axios.get(`${API_URL}/api/articles/${id}`)
       .then(res => setArticle(res.data))
       .catch(err => console.error("Erreur :", err));
   }, [id]);

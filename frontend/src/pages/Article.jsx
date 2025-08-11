@@ -7,7 +7,7 @@ function Article() {
   const [article, setArticle] = useState(null);
 
   useEffect(() => {
-    axios.get(`http://localhost:5000/api/articles/${id}`)
+    axios.get(`https://lina-beg1.onrender.com/api/articles/${id}`)
       .then(res => setArticle(res.data))
       .catch(err => console.error("Erreur :", err));
   }, [id]);
@@ -19,7 +19,7 @@ function Article() {
       <h1>{article.titre}</h1>
       {article.image && (
         <img
-          src={`http://localhost:5000/uploads/${article.image}`}
+          src={`https://lina-beg1.onrender.com/uploads/${article.image}`}
           alt="illustration"
           className="img-fluid mb-3"
         />

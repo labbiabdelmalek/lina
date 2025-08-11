@@ -8,9 +8,9 @@ function Article() {
   const [article, setArticle] = useState(null);
 
   useEffect(() => {
- axios.get(`${API_URL}/api/articles/${id}`)
-      .then(res => setArticle(res.data))
-      .catch(err => console.error("Erreur :", err));
+    axios.get(`${API_URL}/api/articles/${id}`)
+      .then((res) => setArticle(res.data))
+      .catch((err) => console.error('Erreur :', err));
   }, [id]);
 
   if (!article) return <div className="container mt-4">Chargement...</div>;
@@ -25,9 +25,10 @@ function Article() {
           className="img-fluid mb-3"
         />
       )}
-      <p dangerouslySetInnerHTML={{ __html: article.contenu }}></p>
+      <p dangerouslySetInnerHTML={{ __html: article.contenu }} />
       <p><small>Publié le {new Date(article.date).toLocaleDateString()}</small></p>
     </div>
   );
 }
+
 export default Article;

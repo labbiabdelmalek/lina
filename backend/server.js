@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
-
+require('./createAdmin');
 const app = express();
 app.use('/setup', require('./routes/setup')); 
 app.use(cors({

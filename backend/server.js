@@ -1,47 +1,24 @@
+// backend/server.js (version TEST sans DB)
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
-const bodyParser = require("body-parser");
-require("dotenv").config();
 
 const app = express();
 
-// ✅ CORS: autorise ton frontend (ou * pendant les tests)
-app.use(cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
-  credentials: true
-}));
+// CORS large pour tester (on resserrera après)
+app.use(cors({ origin: "*" }));
+app.use(express.json());
 
-// Parsers
-app.use(bodyParser.json());
-// ou simplement: app.use(express.json());
+// Santé
+app.get("/", (req, res) => res.send("Backend test OK 🚀"));
 
-// 📦 Static (uploads)
-app.use('/uploads', express.static('uploads'));
+// Route de test API
+app.get("/api/ping", (req, res) => res.json({ ok: true }));
 
-// 🩺 Route de santé (utile sur Render)
-app.get("/", (req, res) => {
-  res.send("API OK");
+// Route articles de test (sans DB)
+app.get("/api/articles", (req, res) => {
+  res.json([{ _id: "1", titre: "Article test", contenu: "Ceci est un test." }]);
 });
 
-// 🔌 Connexion MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("✅ Connecté à MongoDB");
-    console.log("📂 Base utilisée :", mongoose.connection.name);
-  })
-  .catch((err) => console.error("❌ Erreur MongoDB :", err));
-
-// 🛣️ Routes
-const articlesRoutes = require('./routes/articles');
-app.use('/api/articles', articlesRoutes);
-
-const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes);
-
-// 🚀 Démarrage serveur (Render fournit PORT)
+// Render fournit PORT
 const PORT = process.env.PORT || 5000;
-app.get('/', (req, res) => res.send('API OK')); // pour éviter "Not Found"
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur lancé sur port ${PORT}`);
-});
+app.listen(PORT, () => console.log("✅ Listening on", PORT));

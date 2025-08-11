@@ -6,7 +6,7 @@ function Accueil() {
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/articles')
+    axios.get('https://lina-beg1.onrender.com/api/articles')
       .then(res => setArticles(res.data))
       .catch(err => console.error("Erreur API :", err));
   }, []);

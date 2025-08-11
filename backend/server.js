@@ -11,7 +11,7 @@ const app = express();
 
 // CORS
 app.use(cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
+  origin: ['https://lina-wtb7.onrender.com', 'http://localhost:3000'],
   credentials: true
 }));
 

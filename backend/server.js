@@ -4,11 +4,14 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 require("dotenv").config();
-app.use('/setup', require('./routes/setup'));
+
 
 const User = require("./models/User");
 
 const app = express();
+
+
+app.use('/setup', require('./routes/setup'));
 
 // CORS
 app.use(cors({

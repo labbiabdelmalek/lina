@@ -6,23 +6,15 @@ const User = require('../models/User');
 const router = express.Router();
 
 router.post('/login', async (req, res) => {
-  try {
-    // ⬇️ on récupère EXACTEMENT ces noms
-    const { email, motdepasse } = req.body;
-    if (!email || !motdepasse) {
-      return res.status(400).json({ message: 'Champs manquants' });
-    }
+  const { email, motdepasse } = req.body; // <<< IMPORTANT: 'motdepasse'
+  const user = await User.findOne({ email });
+  if (!user) return res.status(401).json({ message: 'Identifiants invalides' });
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ message: 'Identifiants invalides' });
+  const ok = await bcrypt.compare(motdepasse, user.motdepasse); // <<< motdepasse
+  if (!ok) return res.status(401).json({ message: 'Identifiants invalides' });
 
-    const ok = await bcrypt.compare(motdepasse, user.motdepasse);
-    if (!ok) return res.status(401).json({ message: 'Identifiants invalides' });
-
-    // Optionnel : créer un token
-    const token = jwt.sign({ uid: user._id }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '7d' });
-
-    res.json({ message: 'OK', token });
+  const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' });
+  res.json({ token });
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'Erreur serveur' });

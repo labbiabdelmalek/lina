@@ -1,23 +1,22 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",                // ✅ الملف الرئيسي الصحيح
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js"         // ✅ أمر التشغيل
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-   "bcryptjs": "^2.4.3",
-    "body-parser": "^2.2.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",         // ⬅️ الإصدار المناسب لـ express 4/5
     "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
-    "express": "^5.1.0",
+    "dotenv": "^16.4.5",              // ⬅️ الإصدار المستقر، 17.2.1 غير موجود رسمياً
+    "express": "^4.18.2",             // ⬅️ إصدار مستقر بدل 5.1.0 (مازال تجريبي)
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.17.0",
-    "multer": "^2.0.2"
+    "mongoose": "^8.3.1",
+    "multer": "^1.4.5-lts.1"          // ⬅️ الإصدار المستقر
   },
   "devDependencies": {},
   "description": ""

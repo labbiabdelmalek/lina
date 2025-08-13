@@ -1,27 +1,30 @@
-import { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { API_URL } from '../api';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api"; // نستعمل instance باش يكون withCredentials مفعّل
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [motdepasse, setMotdepasse] = useState('');
-  const [erreur, setErreur] = useState('');
+  const [email, setEmail] = useState("");
+  const [motdepasse, setMotdepasse] = useState("");
+  const [erreur, setErreur] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setErreur('');
+    setErreur("");
 
     try {
-      const res = await axios.post(`${API_URL}/api/auth/login`, {
+      // الباكيند كيتسنى motdepasse مش password
+      await api.post("/api/auth/login", {
         email,
-        motdepasse,
+        motdepasse
       });
-      localStorage.setItem('token', res.data.token);
-      navigate('/admin');
+
+      // إذا بغيت تخزن التوكن من الرد
+      // localStorage.setItem("token", res.data.token);
+
+      navigate("/admin");
     } catch (err) {
-      setErreur('Email ou mot de passe incorrect');
+      setErreur("Email ou mot de passe incorrect");
     }
   };
 
@@ -45,7 +48,9 @@ function Login() {
           className="form-control mb-3"
           required
         />
-        <button type="submit" className="btn btn-primary">Se connecter</button>
+        <button type="submit" className="btn btn-primary">
+          Se connecter
+        </button>
       </form>
       {erreur && <p className="text-danger mt-3">{erreur}</p>}
     </div>

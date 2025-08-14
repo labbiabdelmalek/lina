@@ -9,11 +9,10 @@ const api = axios.create({
   withCredentials: true
 });
 
-// 🔧 مهم: إلا كان الطلب فيه FormData نحيد أي Content-Type
+// إذا كان FormData، نحيد Content-Type باش يتحدد بوحدو
 api.interceptors.request.use((config) => {
-  const isFormData =
-    typeof FormData !== "undefined" && config.data instanceof FormData;
-  if (isFormData && config.headers) {
+  const isFD = typeof FormData !== "undefined" && config.data instanceof FormData;
+  if (isFD && config.headers) {
     delete config.headers["Content-Type"];
     delete config.headers["content-type"];
   }

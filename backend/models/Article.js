@@ -1,3 +1,4 @@
+// backend/models/Article.js
 const mongoose = require('mongoose');
 
 const articleSchema = new mongoose.Schema({
@@ -7,4 +8,4 @@ const articleSchema = new mongoose.Schema({
   date:    { type: Date, default: Date.now }
 });
 
-module.exports = mongoose.model('Article', articleSchema); 
+module.exports = mongoose.model('Article', articleSchema);

@@ -1,4 +1,4 @@
-// src/pages/Dashboard.jsx
+// frontend/src/pages/Dashboard.jsx
 import { useState, useEffect, useRef } from "react";
 import api from "../api";
 
@@ -13,6 +13,7 @@ function Dashboard() {
   const imageInputRef = useRef(null);
 
   const BASE_URL = (api.defaults.baseURL || "").replace(/\/$/, "");
+
   const authHeader = () => {
     const t = localStorage.getItem("token");
     return t ? { Authorization: `Bearer ${t}` } : {};
@@ -27,6 +28,7 @@ function Dashboard() {
       setArticles([]);
     }
   };
+
   useEffect(() => { fetchArticles(); }, []);
 
   const handleSubmit = async (e) => {
@@ -37,10 +39,9 @@ function Dashboard() {
       const fd = new FormData();
       fd.append("titre", titre);
       fd.append("contenu", contenu);
-      if (image) fd.append("image", image);   // اسم الحقل "image"
+      if (image) fd.append("image", image); // اسم الحقل "image"
 
-      const url = editId ? `${BASE_URL}/api/articles/${editId}`
-                         : `${BASE_URL}/api/articles`;
+      const url = editId ? `${BASE_URL}/api/articles/${editId}` : `${BASE_URL}/api/articles`;
       const method = editId ? "PUT" : "POST";
 
       const res = await fetch(url, {
@@ -49,6 +50,7 @@ function Dashboard() {
         headers: { ...authHeader() }, // بلا Content-Type
         credentials: "include"
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data?.message || "Erreur serveur");
 
@@ -112,15 +114,25 @@ function Dashboard() {
             <div className="row g-0">
               {a.image && (
                 <div className="col-md-4">
-                  <img src={`${BASE_URL}/uploads/${a.image}`} className="img-fluid rounded-start" alt={a.titre} />
+                  <img
+                    src={`${BASE_URL}/uploads/${a.image}`}
+                    className="img-fluid rounded-start"
+                    alt={a.titre}
+                  />
                 </div>
               )}
               <div className="col-md-8">
                 <div className="card-body">
                   <h5 className="card-title">{a.titre}</h5>
-                  <p className="card-text">{(typeof a.contenu === "string" ? a.contenu : "").substring(0, 120)}…</p>
-                  <button className="btn btn-sm btn-primary me-2" onClick={() => handleEdit(a)}>✏️ Modifier</button>
-                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(a._id)}>🗑️ Supprimer</button>
+                  <p className="card-text">
+                    {(typeof a.contenu === "string" ? a.contenu : "").substring(0, 120)}…
+                  </p>
+                  <button className="btn btn-sm btn-primary me-2" onClick={() => handleEdit(a)}>
+                    ✏️ Modifier
+                  </button>
+                  <button className="btn btn-sm btn-danger" onClick={() => handleDelete(a._id)}>
+                    🗑️ Supprimer
+                  </button>
                 </div>
               </div>
             </div>
@@ -130,4 +142,5 @@ function Dashboard() {
     </div>
   );
 }
+
 export default Dashboard;

@@ -28,11 +28,14 @@ const defaultOrigins = [
 ];
 
 const allowedOrigins = [...new Set([...envOrigins, ...defaultOrigins])];
+
 const corsOptions = {
-  origin: (origin, cb) => (!origin || allowedOrigins.includes(origin)) ? cb(null, true) : cb(new Error('Not allowed by CORS')),
+  origin: (origin, cb) => (!origin || allowedOrigins.includes(origin))
+    ? cb(null, true)
+    : cb(new Error('Not allowed by CORS')),
   credentials: true,
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization']
+  allowedHeaders: ['Content-Type','Authorization','Accept','X-Requested-With']
 };
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
@@ -48,17 +51,17 @@ function ensureUploadDir() {
       fs.mkdirSync(primary, { recursive: true });
     }
     return primary;
-  } catch {
+  } catch (e) {
     const tmp = '/tmp/uploads';
     if (!fs.existsSync(tmp)) fs.mkdirSync(tmp, { recursive: true });
     return tmp;
   }
 }
 const UPLOAD_DIR = ensureUploadDir();
-process.env.UPLOAD_DIR = UPLOAD_DIR; // ليستعملها أي route
+process.env.UPLOAD_DIR = UPLOAD_DIR; // باش articles.js يقرا نفس المسار
 console.log('📁 Upload dir:', UPLOAD_DIR);
 
-// serve static
+// expose static
 app.use('/uploads', express.static(UPLOAD_DIR));
 
 /* ---------- Healthcheck ---------- */
@@ -67,7 +70,7 @@ app.get('/', (_req, res) => res.send('Lina Backend is Live 🎉'));
 /* ---------- Routes ---------- */
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/articles', require('./routes/articles'));
-app.use('/setup', require('./routes/setup')); // عطّلها فالإنتاج إذا ما محتاجهاش
+app.use('/setup', require('./routes/setup')); // عطّلها فالإنتاج إلا ماحتاجهاش
 
 /* ---------- MongoDB ---------- */
 mongoose.connect(process.env.MONGODB_URI)

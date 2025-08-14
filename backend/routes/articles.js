@@ -3,11 +3,10 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 const Article = require('../models/Article');
-// const requireAuth = require('../middlewares/requireAuth');
 
 const router = express.Router();
 
-/* ---------- Multer config ---------- */
+/* Uploads dir (نفس اللي تحدد فـserver.js) */
 const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -19,47 +18,32 @@ const storage = multer.diskStorage({
   }
 });
 
-// حدود بسيطة + فلتر لأنواع الصور
+/* استقبل أي multipart (صورة/بدون صورة) وخلّي Multer يقرى الحقول */
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, cb) => {
-    const ok = /image\/(png|jpeg|jpg|webp|gif)/.test(file.mimetype);
-    cb(ok ? null : new Error('Type image invalide (png, jpg, jpeg, webp, gif فقط)'));
-  }
+  limits: { fileSize: 5 * 1024 * 1024 }
 });
 
-// helper: نرجع 400 برسالة واضحة إذا وقع خطأ من multer
-const withUpload = (field) => (req, res, next) =>
-  upload.single(field)(req, res, (err) => {
-    if (err) {
-      console.error('MULTER:', err.message);
-      return res.status(400).json({ message: err.message });
-    }
-    next();
-  });
-
-/* ---------- GET: list ---------- */
 router.get('/', async (_req, res) => {
   const items = await Article.find().sort({ _id: -1 });
   res.json(items);
 });
 
-/* ---------- POST: create (image optional) ---------- */
-router.post('/', /*requireAuth,*/ withUpload('image'), async (req, res) => {
+router.post('/', upload.any(), async (req, res) => {
   try {
-    const { titre, contenu } = req.body;
+    // حقول النص (مسمّاة 'titre' و 'contenu' فالفرونت)
+    const titre = req.body?.titre ?? '';
+    const contenu = req.body?.contenu ?? '';
+
     if (!titre || !contenu) {
       return res.status(400).json({ message: 'titre et contenu sont requis' });
     }
-    const image = req.file ? req.file.filename : null;
 
-    const saved = await Article.create({
-      titre,
-      contenu,
-      image,
-      date: new Date()
-    });
+    // أول ملف كصورة (اختياري)
+    const file = Array.isArray(req.files) && req.files.length ? req.files[0] : null;
+    const image = file ? file.filename : null;
+
+    const saved = await Article.create({ titre, contenu, image, date: new Date() });
     return res.status(201).json(saved);
   } catch (e) {
     console.error('POST /articles error:', e);
@@ -67,15 +51,17 @@ router.post('/', /*requireAuth,*/ withUpload('image'), async (req, res) => {
   }
 });
 
-/* ---------- PUT: update (image optional) ---------- */
-router.put('/:id', /*requireAuth,*/ withUpload('image'), async (req, res) => {
+router.put('/:id', upload.any(), async (req, res) => {
   try {
-    const { titre, contenu } = req.body;
+    const titre = req.body?.titre ?? '';
+    const contenu = req.body?.contenu ?? '';
     if (!titre || !contenu) {
       return res.status(400).json({ message: 'titre et contenu sont requis' });
     }
+
     const update = { titre, contenu };
-    if (req.file) update.image = req.file.filename;
+    const file = Array.isArray(req.files) && req.files.length ? req.files[0] : null;
+    if (file) update.image = file.filename;
 
     const saved = await Article.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!saved) return res.status(404).json({ message: 'Article introuvable' });
@@ -86,8 +72,7 @@ router.put('/:id', /*requireAuth,*/ withUpload('image'), async (req, res) => {
   }
 });
 
-/* ---------- DELETE ---------- */
-router.delete('/:id', /*requireAuth,*/ async (req, res) => {
+router.delete('/:id', async (req, res) => {
   await Article.findByIdAndDelete(req.params.id);
   res.json({ ok: true });
 });

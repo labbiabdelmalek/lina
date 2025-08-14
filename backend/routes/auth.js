@@ -55,5 +55,5 @@ router.post('/logout', (req, res) => {
   res.clearCookie('token', { httpOnly: true, secure: true, sameSite: 'None' });
   return res.json({ ok: true });
 });
-
+console.log('LOGIN TRY:', email, 'exists?', !!user);
 module.exports = router;

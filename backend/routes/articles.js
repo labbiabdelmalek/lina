@@ -1,15 +1,19 @@
-// backend/routes/articles.js
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
-const Article = require('../models/Article'); // { titre, contenu, image?, date? }
-// const requireAuth = require('../middlewares/requireAuth'); // فعّلها إلا بغيتي حماية
+const fs = require('fs');
+const Article = require('../models/Article');
+// const requireAuth = require('../middlewares/requireAuth'); // فعّلها إذا بغيتي حماية
 
 const router = express.Router();
 
 /* ---------- Multer (uploads/) ---------- */
+const uploadDir =
+  process.env.UPLOAD_DIR || path.join(__dirname, '..', 'uploads');
+fs.mkdirSync(uploadDir, { recursive: true });
+
 const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, 'uploads'),
+  destination: (_req, _file, cb) => cb(null, uploadDir),
   filename: (_req, file, cb) => {
     const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
     cb(null, unique + path.extname(file.originalname || ''));
@@ -59,7 +63,11 @@ router.put(
       const { titre, contenu } = req.body;
       const update = { titre, contenu };
       if (req.file) update.image = req.file.filename;
-      const saved = await Article.findByIdAndUpdate(req.params.id, update, { new: true });
+      const saved = await Article.findByIdAndUpdate(
+        req.params.id,
+        update,
+        { new: true }
+      );
       if (!saved) return res.status(404).json({ message: 'Article introuvable' });
       return res.json(saved);
     } catch (e) {
@@ -70,7 +78,7 @@ router.put(
 );
 
 /* ---------- DELETE ---------- */
-router.delete('/:id', /*requireAuth,*/ async (req, res) => {
+router.delete('/:id', /* requireAuth, */ async (req, res) => {
   await Article.findByIdAndDelete(req.params.id);
   res.json({ ok: true });
 });

@@ -24,7 +24,7 @@ function Login() {
 
       navigate("/admin");
     } catch (err) {
-      setErreur("Email ou mot de passe incorrect");
+      setErreur("Email ou mot de passe incorrects");
     }
   };
 

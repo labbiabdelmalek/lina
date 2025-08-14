@@ -1,6 +1,7 @@
+// src/pages/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api"; // نستعمل instance باش يكون withCredentials مفعّل
+import api from "../api"; // instance ديال axios فيه baseURL و withCredentials مفعّل
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -13,24 +14,26 @@ function Login() {
     setErreur("");
 
     try {
-      // الباكيند كيتسنى motdepasse مش password
-      await api.post("/api/auth/login", {
+      // إرسال البيانات للباك (الباك كيتسنى motdepasse ماشي password)
+      const res = await api.post("/api/auth/login", {
         email,
         motdepasse
       });
 
-      // إذا بغيت تخزن التوكن من الرد
-      // localStorage.setItem("token", res.data.token);
+      // تخزين التوكن باش نستعمله في الصفحات المحمية
+      localStorage.setItem("token", res.data.token);
 
+      // التوجيه لصفحة الأدمن
       navigate("/admin");
     } catch (err) {
-      setErreur("Email ou mot de passe incorrects");
+      console.error(err);
+      setErreur("Email ou mot de passe incorrect");
     }
   };
 
   return (
-    <div className="container mt-4">
-      <h2>Connexion Admin</h2>
+    <div className="container mt-4" style={{ maxWidth: "400px" }}>
+      <h2 className="mb-4 text-center">Connexion Admin</h2>
       <form onSubmit={handleLogin}>
         <input
           type="email"
@@ -48,11 +51,11 @@ function Login() {
           className="form-control mb-3"
           required
         />
-        <button type="submit" className="btn btn-primary">
+        <button type="submit" className="btn btn-primary w-100">
           Se connecter
         </button>
       </form>
-      {erreur && <p className="text-danger mt-3">{erreur}</p>}
+      {erreur && <p className="text-danger mt-3 text-center">{erreur}</p>}
     </div>
   );
 }

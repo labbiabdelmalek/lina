@@ -1,70 +1,48 @@
-// backend/routes/articles.js
 const express = require('express');
+const path = require('path');
+const multer = require('multer');
+const Article = require('../models/Article'); // تأكد من المسار
+const requireAuth = require('../middlewares/requireAuth'); // إذا بغيت الحماية
+
 const router = express.Router();
-const Article = require('../models/Article');
 
-// GET /api/articles : liste des articles
-router.get('/', async (req, res) => {
-  try {
-    const articles = await Article.find().sort({ date: -1 });
-    res.json(articles);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erreur lors de la récupération des articles' });
+// إعداد التخزين للصور
+const storage = multer.diskStorage({
+  destination: 'uploads',
+  filename: (_req, file, cb) => {
+    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, unique + path.extname(file.originalname || ''));
   }
 });
+const upload = multer({ storage });
 
-// (facultatif) GET /api/articles/:id
-router.get('/:id', async (req, res) => {
-  try {
-    const article = await Article.findById(req.params.id);
-    if (!article) return res.status(404).json({ error: 'Introuvable' });
-    res.json(article);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
+// قائمة المقالات (عمومي/أو محمي)
+router.get('/', async (_req, res) => {
+  const items = await Article.find().sort({ _id: -1 });
+  res.json(items);
 });
 
-// (facultatif) POST /api/articles
-router.post('/', async (req, res) => {
-  try {
-    const { titre, contenu, image } = req.body;
-    const created = await Article.create({ titre, contenu, image });
-    res.status(201).json(created);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: 'Données invalides' });
-  }
+// إضافة مقال
+router.post('/', requireAuth, upload.single('image'), async (req, res) => {
+  const { titre, contenu } = req.body;
+  const image = req.file ? req.file.filename : null;
+  const a = await Article.create({ titre, contenu, image, date: new Date() });
+  res.json(a);
 });
 
-// (facultatif) PUT /api/articles/:id
-router.put('/:id', async (req, res) => {
-  try {
-    const { titre, contenu, image } = req.body;
-    const updated = await Article.findByIdAndUpdate(
-      req.params.id,
-      { titre, contenu, image },
-      { new: true }
-    );
-    if (!updated) return res.status(404).json({ error: 'Introuvable' });
-    res.json(updated);
-  } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: 'Mise à jour impossible' });
-  }
+// تعديل مقال (الصورة اختيارية)
+router.put('/:id', requireAuth, upload.single('image'), async (req, res) => {
+  const { titre, contenu } = req.body;
+  const upd = { titre, contenu };
+  if (req.file) upd.image = req.file.filename;
+  const a = await Article.findByIdAndUpdate(req.params.id, upd, { new: true });
+  res.json(a);
 });
 
-// (facultatif) DELETE /api/articles/:id
-router.delete('/:id', async (req, res) => {
-  try {
-    const deleted = await Article.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Introuvable' });
-    res.json({ ok: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Suppression impossible' });
-  }
+// حذف
+router.delete('/:id', requireAuth, async (req, res) => {
+  await Article.findByIdAndDelete(req.params.id);
+  res.json({ ok: true });
 });
 
 module.exports = router;

@@ -1,42 +1,29 @@
-// createAdmin.js
+// backend/createAdmin.js
+require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const User = require('./models/User'); // garde ce chemin si le fichier est dans backend/
+const User = require('./models/User');
 
-// ⚠️ Tu peux changer ces 2 valeurs si tu veux
-const EMAIL = 'admin@email.com';
-const PASSWORD = '123456';
-
-// Ton URI Atlas (celle que tu utilises sur Render)
-const MONGODB_URI =
-  'mongodb+srv://lina:linahouabdel2016@cluster0.kzinzje.mongodb.net/blogdb?retryWrites=true&w=majority&appName=Cluster0';
+// 👉 غادي نقراو من المتغيّرات باش مايبقاش شي سر فالكود
+const EMAIL = process.env.ADMIN_EMAIL || 'admin@email.com';
+const PASSWORD = process.env.ADMIN_PASSWORD || '123456';
 
 (async () => {
   try {
-    await mongoose.connect(MONGODB_URI, {
-      // ces options sont OK si tu utilises une version de mongoose < 7
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-
+    // Mongoose v8: بلا useNewUrlParser/useUnifiedTopology
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ Connecté à MongoDB');
-
-    // Évite les doublons
-    const existing = await User.findOne({ email: EMAIL });
-    if (existing) {
-      console.log('ℹ️ Un utilisateur existe déjà avec cet email :', EMAIL);
-      await mongoose.connection.close();
-      process.exit(0);
-    }
 
     const hashedPwd = await bcrypt.hash(PASSWORD, 10);
 
-    await User.create({
-      email: EMAIL,
-      motdepasse: hashedPwd,
-    });
+    // ✅ upsert: إلا كان كاين يبدّل الموط باش، إلا ماكانش كينشئو
+    await User.updateOne(
+      { email: EMAIL },
+      { $set: { email: EMAIL, motdepasse: hashedPwd } },
+      { upsert: true }
+    );
 
-    console.log('✅ Admin créé avec succès:', EMAIL);
+    console.log(`✅ Admin prêt: ${EMAIL} (créé/MAJ)`);
     await mongoose.connection.close();
     process.exit(0);
   } catch (err) {

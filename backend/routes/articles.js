@@ -3,11 +3,9 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const Article = require('../models/Article');
-// const requireAuth = require('../middlewares/requireAuth');
 
 const router = express.Router();
 
-/* ===== Uploads ===== */
 const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -18,22 +16,20 @@ const storage = multer.diskStorage({
     cb(null, id + path.extname(file.originalname || ''));
   }
 });
-const upload = multer({ storage }); // single('image') دايمًا
+const upload = multer({ storage });
 
-/* ===== GET ===== */
 router.get('/', async (_req, res) => {
   const items = await Article.find().sort({ _id: -1 });
   res.json(items);
 });
 
-/* ===== POST ===== */
-router.post('/', /*requireAuth,*/ upload.single('image'), async (req, res) => {
+router.post('/', upload.single('image'), async (req, res) => {
   try {
     const titre = (req.body?.titre || '').trim();
     const contenu = (req.body?.contenu || '').trim();
-    if (!titre || !contenu) {
+    if (!titre || !contenu)
       return res.status(400).json({ message: 'titre et contenu sont requis' });
-    }
+
     const image = req.file ? req.file.filename : null;
     const saved = await Article.create({ titre, contenu, image, date: new Date() });
     res.status(201).json(saved);
@@ -43,14 +39,13 @@ router.post('/', /*requireAuth,*/ upload.single('image'), async (req, res) => {
   }
 });
 
-/* ===== PUT ===== */
-router.put('/:id', /*requireAuth,*/ upload.single('image'), async (req, res) => {
+router.put('/:id', upload.single('image'), async (req, res) => {
   try {
     const titre = (req.body?.titre || '').trim();
     const contenu = (req.body?.contenu || '').trim();
-    if (!titre || !contenu) {
+    if (!titre || !contenu)
       return res.status(400).json({ message: 'titre et contenu sont requis' });
-    }
+
     const update = { titre, contenu };
     if (req.file) update.image = req.file.filename;
 
@@ -63,8 +58,7 @@ router.put('/:id', /*requireAuth,*/ upload.single('image'), async (req, res) => 
   }
 });
 
-/* ===== DELETE ===== */
-router.delete('/:id', /*requireAuth,*/ async (req, res) => {
+router.delete('/:id', async (req, res) => {
   await Article.findByIdAndDelete(req.params.id);
   res.json({ ok: true });
 });

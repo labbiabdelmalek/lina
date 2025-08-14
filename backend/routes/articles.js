@@ -1,4 +1,3 @@
-// backend/routes/articles.js
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
@@ -19,15 +18,15 @@ const storage = multer.diskStorage({
     cb(null, id + path.extname(file.originalname || ''));
   }
 });
-const upload = multer({ storage });
+const upload = multer({ storage }); // single('image') دايمًا
 
-/* ===== GET: list ===== */
+/* ===== GET ===== */
 router.get('/', async (_req, res) => {
   const items = await Article.find().sort({ _id: -1 });
   res.json(items);
 });
 
-/* ===== POST: create (image اختيارية) ===== */
+/* ===== POST ===== */
 router.post('/', /*requireAuth,*/ upload.single('image'), async (req, res) => {
   try {
     const titre = (req.body?.titre || '').trim();
@@ -36,7 +35,6 @@ router.post('/', /*requireAuth,*/ upload.single('image'), async (req, res) => {
       return res.status(400).json({ message: 'titre et contenu sont requis' });
     }
     const image = req.file ? req.file.filename : null;
-
     const saved = await Article.create({ titre, contenu, image, date: new Date() });
     res.status(201).json(saved);
   } catch (e) {
@@ -45,7 +43,7 @@ router.post('/', /*requireAuth,*/ upload.single('image'), async (req, res) => {
   }
 });
 
-/* ===== PUT: update (image اختيارية) ===== */
+/* ===== PUT ===== */
 router.put('/:id', /*requireAuth,*/ upload.single('image'), async (req, res) => {
   try {
     const titre = (req.body?.titre || '').trim();
@@ -53,7 +51,6 @@ router.put('/:id', /*requireAuth,*/ upload.single('image'), async (req, res) => 
     if (!titre || !contenu) {
       return res.status(400).json({ message: 'titre et contenu sont requis' });
     }
-
     const update = { titre, contenu };
     if (req.file) update.image = req.file.filename;
 

@@ -17,37 +17,48 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-/* ---------- CORS (Render + local) ---------- */
+/* ---------- CORS ---------- */
 const envOrigins = (process.env.CORS_ORIGIN || process.env.ORIGIN || '')
-  .split(',')
-  .map(s => s.trim())
-  .filter(Boolean);
+  .split(',').map(s => s.trim()).filter(Boolean);
 
 const defaultOrigins = [
-  'https://lina-wtb7.onrender.com', // FRONT Render
-  'http://localhost:5173',           // Vite
-  'http://localhost:3000'            // CRA
+  'https://lina-wtb7.onrender.com',
+  'http://localhost:5173',
+  'http://localhost:3000'
 ];
 
 const allowedOrigins = [...new Set([...envOrigins, ...defaultOrigins])];
-
 const corsOptions = {
-  origin: (origin, cb) => {
-    if (!origin) return cb(null, true); // curl/postman
-    return allowedOrigins.includes(origin)
-      ? cb(null, true)
-      : cb(new Error('Not allowed by CORS'));
-  },
+  origin: (origin, cb) => (!origin || allowedOrigins.includes(origin)) ? cb(null, true) : cb(new Error('Not allowed by CORS')),
   credentials: true,
   methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type','Authorization']
 };
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions)); // preflight
+app.options('*', cors(corsOptions));
 
-/* ---------- Uploads: إنشاء المجلد + static ---------- */
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
-fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+/* ---------- Upload dir (robuste + fallback) ---------- */
+function ensureUploadDir() {
+  const primary = process.env.UPLOAD_DIR || path.join(__dirname, 'uploads');
+  try {
+    if (fs.existsSync(primary)) {
+      const st = fs.statSync(primary);
+      if (!st.isDirectory()) throw new Error('UPLOAD_DIR exists and is not a directory');
+    } else {
+      fs.mkdirSync(primary, { recursive: true });
+    }
+    return primary;
+  } catch {
+    const tmp = '/tmp/uploads';
+    if (!fs.existsSync(tmp)) fs.mkdirSync(tmp, { recursive: true });
+    return tmp;
+  }
+}
+const UPLOAD_DIR = ensureUploadDir();
+process.env.UPLOAD_DIR = UPLOAD_DIR; // ليستعملها أي route
+console.log('📁 Upload dir:', UPLOAD_DIR);
+
+// serve static
 app.use('/uploads', express.static(UPLOAD_DIR));
 
 /* ---------- Healthcheck ---------- */
@@ -79,5 +90,5 @@ mongoose.connect(process.env.MONGODB_URI)
   .catch(err => console.error('❌ Erreur MongoDB:', err.message));
 
 /* ---------- Start ---------- */
-const PORT = process.env.PORT || 5000; // Render يوفّر PORT
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 API on port ${PORT}`));

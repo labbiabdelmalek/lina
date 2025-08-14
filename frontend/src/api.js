@@ -9,16 +9,13 @@ const api = axios.create({
   withCredentials: true
 });
 
-// إذا كان الطلب فيه FormData خليه يضبط Content-Type تلقائياً (مع boundary)
+// 🔧 مهم: إلا كان الطلب فيه FormData نحيد أي Content-Type
 api.interceptors.request.use((config) => {
   const isFormData =
     typeof FormData !== "undefined" && config.data instanceof FormData;
-  if (isFormData) {
-    // نحيد أي Content-Type راه Axios غادي يحددو بوحدو
-    if (config.headers) {
-      delete config.headers["Content-Type"];
-      delete config.headers["content-type"];
-    }
+  if (isFormData && config.headers) {
+    delete config.headers["Content-Type"];
+    delete config.headers["content-type"];
   }
   return config;
 });

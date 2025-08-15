@@ -27,11 +27,11 @@ function Accueil() {
       <div className="row">
         {articles.map((article) => (
           <div className="col-md-6 col-lg-4 mb-4" key={article._id}>
-            <div className="card h-100">
+            <div className="h-100">
               {article.image && (
                 <img
                   src={`${API_URL}/uploads/${article.image}`}
-                  className="card-img-top"
+                  className="img-fluid card-img-top"
                   alt="visuel"
                 />
               )}

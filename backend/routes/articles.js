@@ -1,43 +1,49 @@
-// backend/routes/articles.js
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
 const multer = require('multer');
+const { v2: cloudinary } = require('cloudinary');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const Article = require('../models/Article'); // { titre, contenu, image?, date? }
 
 const router = express.Router();
 
-/* ===== إعداد مجلد الرفع ===== */
-const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'uploads');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+/* Cloudinary (قيم من ENV) */
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const id = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, id + path.extname(file.originalname || ''));
+/* Multer -> Cloudinary storage */
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'lina-blog',
+    resource_type: 'image',
+    transformation: [
+      { width: 1280, height: 720, crop: 'fill', gravity: 'auto', quality: 'auto' }
+    ]
   }
 });
 const upload = multer({ storage });
 
-/* ===== GET: جميع المقالات ===== */
+/* GET: list */
 router.get('/', async (_req, res) => {
   const items = await Article.find().sort({ _id: -1 });
   res.json(items);
 });
 
-/* ===== GET: مقال واحد بحسب id ===== */
+/* GET: single */
 router.get('/:id', async (req, res) => {
   try {
     const item = await Article.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Article introuvable' });
     res.json(item);
   } catch {
-    return res.status(400).json({ message: 'Id invalide' });
+    res.status(400).json({ message: 'Id invalide' });
   }
 });
 
-/* ===== POST: إنشاء (الصورة اختيارية) ===== */
+/* POST: create (image اختيارية) */
 router.post('/', upload.single('image'), async (req, res) => {
   try {
     const titre = (req.body?.titre || '').trim();
@@ -45,8 +51,10 @@ router.post('/', upload.single('image'), async (req, res) => {
     if (!titre || !contenu) {
       return res.status(400).json({ message: 'titre et contenu sont requis' });
     }
-    const image = req.file ? req.file.filename : null;
-    const saved = await Article.create({ titre, contenu, image, date: new Date() });
+    // Cloudinary كيْرجّع secure_url فـ req.file.path
+    const imageUrl = req.file ? req.file.path : null;
+
+    const saved = await Article.create({ titre, contenu, image: imageUrl, date: new Date() });
     res.status(201).json(saved);
   } catch (e) {
     console.error('POST /articles:', e);
@@ -54,7 +62,7 @@ router.post('/', upload.single('image'), async (req, res) => {
   }
 });
 
-/* ===== PUT: تعديل (الصورة اختيارية) ===== */
+/* PUT: update (image اختيارية) */
 router.put('/:id', upload.single('image'), async (req, res) => {
   try {
     const titre = (req.body?.titre || '').trim();
@@ -63,7 +71,7 @@ router.put('/:id', upload.single('image'), async (req, res) => {
       return res.status(400).json({ message: 'titre et contenu sont requis' });
     }
     const update = { titre, contenu };
-    if (req.file) update.image = req.file.filename;
+    if (req.file) update.image = req.file.path; // رابط Cloudinary
 
     const saved = await Article.findByIdAndUpdate(req.params.id, update, { new: true });
     if (!saved) return res.status(404).json({ message: 'Article introuvable' });
@@ -74,7 +82,7 @@ router.put('/:id', upload.single('image'), async (req, res) => {
   }
 });
 
-/* ===== DELETE ===== */
+/* DELETE: مابغيناش دابا نحيدو الصورة من Cloudinary */
 router.delete('/:id', async (req, res) => {
   await Article.findByIdAndDelete(req.params.id);
   res.json({ ok: true });

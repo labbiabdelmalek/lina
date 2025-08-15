@@ -135,5 +135,5 @@
 @media (max-width: 992px){
   .nav-desktop, .actions{ display:none; }
   .burger{ display:block; }
-  .nav-wrap{ grid-template-columns: auto 1fr auto; }
+  .nav-wrap{ grid-template-columns: auto 1fr auto; } 
 }

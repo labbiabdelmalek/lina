@@ -5,6 +5,12 @@
   --muted: #64748b;
   --brand: linear-gradient(135deg,#7c3aed,#2563eb);
   --btn: linear-gradient(135deg,#2563eb,#7c3aed);
+
+  /* …tes variables existantes… */
+  --mobileMenuBg: rgba(15,23,42,.96);  /* sombre (slate-900) */
+  --mobileInk: #f8fafc;                /* texte principal sur mobile */
+  --mobileMuted: #cbd5e1;              /* texte secondaire */
+  --mobileBorder: rgba(255,255,255,.08);
 }
 
 .site-header{
@@ -110,29 +116,55 @@
 .burger.active span:nth-child(2){ opacity: 0; }
 .burger.active span:nth-child(3){ transform: translateY(-8px) rotate(-45deg); }
 
-/* Drawer mobile — hidden by default on desktop */
-.mobile-menu { display: none; }
+/* Drawer mobile — caché par défaut sur desktop */
+.mobile-menu{ display:none; }
 
-/* Mobile only */
+/* Voile derrière le menu */
+.scrim{ display:none; }
+
 @media (max-width: 992px){
+  .nav-desktop, .actions{ display:none; }
+  .burger{ display:block; }
+  .nav-wrap{ grid-template-columns: auto 1fr auto; }
+
+  /* voile */
+  .scrim{
+    position: fixed;
+    inset: 64px 0 0 0;               /* sous l’en-tête */
+    background: rgba(15,23,42,.35);
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s ease;
+    display:block; z-index: 998;
+  }
+  .scrim.show{ opacity: 1; pointer-events: auto; }
+
+  /* menu */
   .mobile-menu{
     position: fixed;
     inset: 64px 0 0 auto;
     width: min(320px, 90vw);
     transform: translateX(100%);
     transition: transform .25s ease;
-    background: rgba(255,255,255,.95);
-    backdrop-filter: blur(10px);
-    border-left: 1px solid var(--border);
+    background: var(--mobileMenuBg);
+    color: var(--mobileInk);
+    border-left: 1px solid var(--mobileBorder);
     padding: 18px;
-    display: flex;            /* show only on mobile */
-    flex-direction: column;
-    gap: 10px;
+    display: flex; flex-direction: column; gap: 10px;
     z-index: 999;
   }
   .mobile-menu.show{ transform: translateX(0); }
 
-  /* we already hide desktop nav/actions on mobile */
-  .nav-desktop, .actions{ display:none; }
-  .burger{ display:block; }
+  .mobile-menu .h-link{
+    color: var(--mobileMuted);
+    padding: 12px 4px; font-size: 16px;
+  }
+  .mobile-menu .h-link:hover,
+  .mobile-menu .h-link.is-active{ color: var(--mobileInk); }
+
+  .mobile-actions{ margin-top: 8px; }
+  .mobile-actions .btn-primary{
+    width: 100%;
+    box-shadow: 0 10px 20px rgba(0,0,0,.35);
+  }
 }
+

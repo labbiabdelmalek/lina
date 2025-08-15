@@ -31,7 +31,7 @@ function Accueil() {
               {article.image && (
                 <img
                   src={`${API_URL}/uploads/${article.image}`}
-                  className="img-fluid card-img-top"
+                  className="img-fluid "
                   alt="visuel"
                 />
               )}

@@ -1,51 +1,62 @@
-// frontend/src/pages/Accueil.jsx
-
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Link } from 'react-router-dom';
-import { API_URL } from '../api';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import api, { API_URL } from "../api";
 
 function Accueil() {
   const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${API_URL}/api/articles`)
-      .then((res) => {
-        const list = Array.isArray(res.data) ? res.data : [];
-        // ⚠️ on filtre les docs incomplets (ex: vieux doc test sans contenu)
-        setArticles(list.filter(a => a && a.titre));
-      })
-      .catch((err) => console.error('Erreur API :', err));
+    (async () => {
+      try {
+        const res = await api.get("/api/articles");
+        setArticles(res.data || []);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, []);
 
-  const excerpt = (txt) =>
-    (typeof txt === 'string' ? txt : '').substring(0, 100);
+  if (loading) return <div className="container py-4">Chargement…</div>;
 
   return (
-    <div className="container mt-4">
-      <h1 className="mb-4">Article récent</h1>
-      <div className="row">
-        {articles.map((article) => (
-          <div className="col-md-6 col-lg-4 mb-4" key={article._id}>
-            <div className="">
-              {article.image && (
-                <img
-                  src={`${API_URL}/uploads/${article.image}`}
-                  className="img-fluid "
-                  alt="visuel"
-                />
-              )}
-              <div className="card-body">
-                <h5 className="card-title">{article.titre}</h5>
-                <p className="card-text">{excerpt(article.contenu)}...</p>
-                <Link to={`/article/${article._id}`} className="btn btn-primary">
-                  Lire plus
-                </Link>
+    <div className="container py-4">
+      <h2 className="mb-4">Articles récents</h2>
+
+      {articles.length === 0 ? (
+        <p>Aucun article pour le moment.</p>
+      ) : (
+        <div className="row">
+          {articles.map((a) => {
+            const imgSrc = a.image?.startsWith("http")
+              ? a.image
+              : a.image
+              ? `${API_URL}/uploads/${a.image}`
+              : "/no-image.svg";
+
+            return (
+              <div className="col-md-4 mb-4" key={a._id}>
+                <div className="card h-100 shadow-sm">
+                  <Link to={`/article/${a._id}`}>
+                    <div className="thumb card-img-top">
+                      <img src={imgSrc} alt={a.titre} loading="lazy" decoding="async" />
+                    </div>
+                  </Link>
+                  <div className="card-body d-flex flex-column">
+                    <h5 className="card-title text-uppercase">{a.titre}</h5>
+                    <p className="card-text text-muted mb-4">
+                      {(typeof a.contenu === "string" ? a.contenu : "").slice(0, 150)}…
+                    </p>
+                    <Link to={`/article/${a._id}`} className="btn btn-dark mt-auto">Lire plus</Link>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -27,7 +27,7 @@ function Accueil() {
       <div className="row">
         {articles.map((article) => (
           <div className="col-md-6 col-lg-4 mb-4" key={article._id}>
-            <div className="h-100">
+            <div className="">
               {article.image && (
                 <img
                   src={`${API_URL}/uploads/${article.image}`}

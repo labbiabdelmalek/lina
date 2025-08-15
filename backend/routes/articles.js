@@ -3,11 +3,11 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
-const Article = require('../models/Article');
+const Article = require('../models/Article'); // { titre, contenu, image?, date? }
 
 const router = express.Router();
 
-/* ===== Uploads ===== */
+/* ===== إعداد مجلد الرفع ===== */
 const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
@@ -20,19 +20,25 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-/* ===== GET ===== */
+/* ===== GET: جميع المقالات ===== */
 router.get('/', async (_req, res) => {
   const items = await Article.find().sort({ _id: -1 });
   res.json(items);
 });
 
-/* ===== POST (image اختيارية) ===== */
-router.post('/', (req, res, next) => {
-  upload.single('image')(req, res, (err) => {
-    if (err) return res.status(400).json({ message: err.message });
-    next();
-  });
-}, async (req, res) => {
+/* ===== GET: مقال واحد بحسب id ===== */
+router.get('/:id', async (req, res) => {
+  try {
+    const item = await Article.findById(req.params.id);
+    if (!item) return res.status(404).json({ message: 'Article introuvable' });
+    res.json(item);
+  } catch {
+    return res.status(400).json({ message: 'Id invalide' });
+  }
+});
+
+/* ===== POST: إنشاء (الصورة اختيارية) ===== */
+router.post('/', upload.single('image'), async (req, res) => {
   try {
     const titre = (req.body?.titre || '').trim();
     const contenu = (req.body?.contenu || '').trim();
@@ -48,13 +54,8 @@ router.post('/', (req, res, next) => {
   }
 });
 
-/* ===== PUT (image اختيارية) ===== */
-router.put('/:id', (req, res, next) => {
-  upload.single('image')(req, res, (err) => {
-    if (err) return res.status(400).json({ message: err.message });
-    next();
-  });
-}, async (req, res) => {
+/* ===== PUT: تعديل (الصورة اختيارية) ===== */
+router.put('/:id', upload.single('image'), async (req, res) => {
   try {
     const titre = (req.body?.titre || '').trim();
     const contenu = (req.body?.contenu || '').trim();

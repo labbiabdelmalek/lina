@@ -1,7 +1,6 @@
-// src/pages/Article.jsx
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import api from "../api";
+import api, { API_URL } from "../api";
 
 function Article() {
   const { id } = useParams();
@@ -9,27 +8,14 @@ function Article() {
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState("");
 
-  const BASE_URL = (api.defaults.baseURL || "").replace(/\/$/, "");
-
   useEffect(() => {
-    let stop = false;
+    let off = false;
     setLoading(true);
     setErreur("");
-    api
-      .get(`/api/articles/${id}`)
-      .then((res) => {
-        if (!stop) {
-          setArticle(res.data);
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (!stop) {
-          setErreur(err.response?.data?.message || "Erreur serveur");
-          setLoading(false);
-        }
-      });
-    return () => { stop = true; };
+    api.get(`/api/articles/${id}`)
+      .then(res => { if (!off) { setArticle(res.data); setLoading(false); }})
+      .catch(err => { if (!off) { setErreur(err.response?.data?.message || "Erreur serveur"); setLoading(false); }});
+    return () => { off = true; };
   }, [id]);
 
   if (loading) return <div className="container py-5">Chargement…</div>;
@@ -40,20 +26,23 @@ function Article() {
     </div>
   );
 
+  const imgSrc = article.image?.startsWith("http")
+    ? article.image
+    : article.image
+    ? `${API_URL}/uploads/${article.image}`
+    : null;
+
   return (
     <div className="container py-5">
       <h1 className="mb-3">{article.titre}</h1>
-      {article.image && (
-        <img
-          src={`${BASE_URL}/uploads/${article.image}`}
-          alt={article.titre}
-          className="img-fluid mb-4"
-        />
+      {imgSrc && (
+        <div className="thumb mb-4" style={{ maxWidth: 900 }}>
+          <img src={imgSrc} alt={article.titre} loading="lazy" decoding="async" />
+        </div>
       )}
       <p>{article.contenu}</p>
       <Link to="/" className="btn btn-secondary mt-3">← Retour</Link>
     </div>
   );
 }
-
 export default Article;

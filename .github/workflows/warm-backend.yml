@@ -1,0 +1,13 @@
+name: Warm Backend
+on:
+  schedule:
+    - cron: "*/14 * * * *"   # كل 14 دقيقة
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Curl backend
+        run: |
+          curl -sS -m 10 https://lina-beg1.onrender.com/ || true
